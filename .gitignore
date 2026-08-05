@@ -1,0 +1,39 @@
+# Large detection / token / result artifacts (download separately)
+*.json
+*.zip
+data/detector
+data/utils
+result/
+eval_result*/
+Fusion_Poly_EXP/
+
+# Local / generated
+__pycache__/
+**/__pycache__/
+**/.ipynb_checkpoints/
+.pytest_cache/
+.idea/
+*.ipynb
+*.pyc
+*.log
+
+# Large media kept out of the remote repo
+docs/Visualization.gif
+
+# Debug / internal / non-release paths (keep locally, do not push)
+debug_*.py
+test_import.py
+linearsearch.py
+get_nuscenes_stats.py
+VERSION.md
+condaenv*.requirements.txt
+run_experiment.sh
+auto_finetune_module/
+docs/plans/
+docs/debug-*.md
+docs/2.png
+docs/Poly-MOT.jpg
+scripts/
+tools/
+tests/
+visualization/
