@@ -3,7 +3,7 @@
 **Official Repository for the IROS 2026 Accepted Paper**
 
 > [**Fusion-Poly: A Polyhedral Framework Based on Spatial-Temporal Fusion for 3D Multi-Object Tracking**](https://arxiv.org/abs/2603.08199),  
-> Xian Wu, Yitao Wu, Xiaoyu Li, Zijia Li, Lijun Zhao, Lining Sun  
+> Xian Wu*, Yitao Wu*, Xiaoyu Li*, Zijia Li, Lijun Zhao, Lining Sun  
 > *arXiv technical report ([arXiv 2603.08199](https://arxiv.org/abs/2603.08199))*
 
 ![framework](docs/framework.jpg)
