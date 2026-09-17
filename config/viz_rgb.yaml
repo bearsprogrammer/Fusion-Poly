@@ -1,0 +1,48 @@
+paths:
+  dataset_root: /home/allen-5070ti/dataset/nuScenes/full_trainval
+  results_json: Fusion_Poly_EXP/result/nusc_config_high/results.json
+  detection_2d_json: data/utils/cascade_rcnn_4hz/nuscenes_val_cascade_2d_4hz.json
+  detection_3d_json: data/detector/val/nuscenes_val_centerpoint_3d.json
+  output_dir: Fusion_Poly_EXP/visualization/nusc_config_high_rgb
+dataset:
+  version: v1.0-trainval
+selection:
+  scene_name: scene-0915  # First scene with predictions, sorted by scene name.
+  max_scenes: 1
+  start_frame: 0
+  max_frames: null
+  classes: [car]  # null = all; e.g. [car, pedestrian]
+render:
+  cameras:
+    - CAM_BACK
+    - CAM_BACK_LEFT
+    - CAM_BACK_RIGHT
+    - CAM_FRONT
+    - CAM_FRONT_LEFT
+    - CAM_FRONT_RIGHT
+  score_threshold: 0.0
+  jpeg_quality: 90
+  info_level:  # Text at the top-left of each image.
+    text_camera_name: true
+    text_scene_idx: true
+    text_frame_index: true
+    text_threshold: true
+    text_sample_token: false
+    text_detection_legend: true
+  cube_level:  # Object/GT geometry and labels.
+    cube_gt_overlay: true
+    cube_tracking_overlay: false
+    cube_heading: false
+    text_track_id: true
+    text_class: true
+    text_score: false
+    text_gt_id: false
+  detection_level:  # Raw detector inputs, before tracker filtering/fusion.
+    cube_2d_overlay: true      # Cyan rectangles.
+    cube_3d_overlay: true      # Magenta dashed cuboids.
+    cube_heading: true
+    text_class: false
+    text_score: false
+    score_threshold_2d: 0.0    # Detector confidence, independent of track score.
+    score_threshold_3d: 0.0
+    include_mid_frames: true  # Actual async RGB; 2D detections only.

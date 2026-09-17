@@ -1,0 +1,56 @@
+paths:
+  dataset_root: /home/allen-5070ti/dataset/nuScenes/full_trainval
+  results_json: Fusion_Poly_EXP/result/nusc_config_high/results.json
+  detection_3d_json: data/detector/val/nuscenes_val_centerpoint_3d.json
+  detection_2d_json: data/utils/cascade_rcnn_4hz/nuscenes_val_cascade_2d_4hz.json
+  output_dir: Fusion_Poly_EXP/visualization/nusc_config_high_3d
+dataset:
+  version: v1.0-trainval
+selection:
+  scene_name: scene-0099
+  start_frame: 0
+  max_frames: null           # One scene only; keyframes (2 Hz) in this base GUI.
+  classes: [car]            # null = all tracking classes.
+coordinates:
+  frame: ego               # ego | world_first | global
+  # ego: current LIDAR_TOP ego pose; +X forward, +Y left, +Z up.
+  # world_first: first scene LIDAR_TOP ego pose, origin AND axes fixed.
+  # global: dataset global coordinates, without recentering.
+gui:
+  width: 1600
+  height: 1000
+  sidebar_width: 440
+  require_hardware_gpu: true
+  playback_fps: 2.0         # Display playback rate, not state interpolation.
+  camera: CAM_FRONT
+  camera_panel: true        # RGB + 2D detections; never invent 2D box depth.
+  point_size: 2.0
+  line_width: 2.0
+  lidar_stride: 2           # Display subsampling only.
+  lidar_radius_m: 80.0      # Crop in current ego XY, independent of view frame.
+render:
+  score_threshold: 0.2
+  cameras: [CAM_BACK, CAM_BACK_LEFT, CAM_BACK_RIGHT, CAM_FRONT, CAM_FRONT_LEFT, CAM_FRONT_RIGHT]
+  info_level:
+    text_camera_name: true
+    text_scene_idx: true
+    text_frame_index: true
+    text_threshold: true
+    text_sample_token: false
+    text_detection_legend: true
+  cube_level:
+    cube_gt_overlay: true
+    cube_tracking_overlay: true
+    cube_heading: true
+    text_track_id: true
+    text_class: false
+    text_score: false
+    text_gt_id: false
+  detection_level:
+    cube_2d_overlay: true
+    cube_3d_overlay: true
+    cube_heading: true
+    text_class: false
+    text_score: false
+    score_threshold_2d: 0.2
+    score_threshold_3d: 0.2

@@ -1,0 +1,3 @@
+# Python 3.7 / fusionpoly-repro. Open3D GUI uses OpenGL, not CUDA kernels.
+open3d==0.17.0
+nbformat==5.7.0

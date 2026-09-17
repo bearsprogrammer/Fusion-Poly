@@ -3,7 +3,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataloader.nusc_loader import NuScenesloader
 from tracking.nusc_tracker import Tracker
 from nuscenes.nuscenes import NuScenes
-from auto_finetune_module.utils.config_dict_tree import ConfigDictTree
 from data.script.NUSC_CONSTANT import *
 from utils.io import load_file, dict_to_yaml
 from utils.script import tra_trans_det
@@ -290,6 +289,8 @@ def linear_search_parameters(online_cfg, intervals: List[List], steps: List[floa
     :return: parameter under the best performance
     """
     # load raw config
+    from auto_finetune_module.utils.config_dict_tree import ConfigDictTree
+
     online_config = copy.deepcopy(online_cfg)
 
     # check the sort metric
