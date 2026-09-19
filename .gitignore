@@ -37,3 +37,37 @@ scripts/
 tools/
 tests/
 visualization/
+
+# Cross-machine development: macOS and local editor files
+.DS_Store
+._*
+.AppleDouble/
+__MACOSX/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local Python environments and build/cache artifacts
+.venv/
+venv/
+.conda/
+/build/
+/dist/
+*.egg-info/
+*.pyo
+*.pyd
+.mypy_cache/
+.ruff_cache/
+
+# Machine-specific full configs; pass explicitly with --config/--config_path.
+# Keep shared config/*.yaml and environment.yaml versioned.
+/config/*.local.yaml
+/config/*.local.yml
+.env
+.env.*
+!.env.example
+
+# Small, portable scene lists are exceptions to the original *.json rule.
+!/data/train_indice.json
+!/data/val_indice.json
