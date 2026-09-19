@@ -1,0 +1,5 @@
+# Open3D transitive web dependencies: match the existing Python 3.7 environment.
+# Main numerical / GUI packages remain pinned in the root requirements files.
+dash==2.15.0
+Flask==2.2.5
+Werkzeug==2.2.3

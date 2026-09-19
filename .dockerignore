@@ -1,0 +1,8 @@
+# The image contains dependencies only; workspace and dataset are mounted.
+# Keep the multi-GB detector/result folders out of the build context.
+**
+!Dockerfile
+!requirements.txt
+!requirements-viz3d.txt
+!docker/
+!docker/constraints-py37.txt
