@@ -4,6 +4,9 @@ paths:
   detection_3d_json: data/detector/val/nuscenes_val_centerpoint_3d.json
   detection_2d_json: data/utils/cascade_rcnn_4hz/nuscenes_val_cascade_2d_4hz.json
   output_dir: Fusion_Poly_EXP/visualization/nusc_config_high_3d
+  association_dir: Fusion_Poly_EXP/inspection/nusc_config_high/associations
+  association_tracker_config: Fusion_Poly_EXP/eval_results/nusc_config_high/config.yaml
+  first_token_json: data/utils/first_token_table/trainval/nuscenes_val_first_sample_tokens.json
 dataset:
   version: v1.0-trainval
 selection:
@@ -29,6 +32,9 @@ gui:
   lidar_stride: 2           # Display subsampling only.
   lidar_radius_m: 80.0      # Crop in current ego XY, independent of view frame.
 render:
+  association_level:
+    edge_overlay: true       # Actual 3D assignments; export cache once per scene.
+    edge_line_width: 4.0      # Red lines, slightly thicker than box edges (pixels).
   score_threshold: 0.2
   cameras: [CAM_BACK, CAM_BACK_LEFT, CAM_BACK_RIGHT, CAM_FRONT, CAM_FRONT_LEFT, CAM_FRONT_RIGHT]
   info_level:

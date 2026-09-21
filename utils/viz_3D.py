@@ -25,6 +25,7 @@ from nuscenes.utils.data_classes import Box, LidarPointCloud
 from nuscenes.utils.geometry_utils import BoxVisibility, view_points
 from nuscenes.eval.tracking.utils import category_to_tracking_name
 from utils import viz as rgb
+from utils import association_edges
 
 
 def rigid_transform(record):
@@ -45,6 +46,14 @@ def read_config(path):
     if cfg['dataset']['version'] != 'v1.0-trainval':
         raise ValueError('Base GUI supports v1.0-trainval keyframes only')
     sel, ui, ren = cfg['selection'], cfg['gui'], cfg['render']
+    edge = ren.setdefault('association_level', {})
+    edge.setdefault('edge_overlay', False)
+    edge.setdefault('edge_line_width', 4.0)
+    if type(edge['edge_overlay']) is not bool:
+        raise ValueError('association_level.edge_overlay must be a boolean')
+    if (type(edge['edge_line_width']) not in (int, float) or
+            not np.isfinite(edge['edge_line_width']) or edge['edge_line_width'] <= 0):
+        raise ValueError('association_level.edge_line_width must be positive')
     if not isinstance(sel['scene_name'], str):
         raise ValueError('Select exactly one scene_name')
     if type(sel['start_frame']) is not int or sel['start_frame'] < 0:
@@ -128,8 +137,18 @@ class SceneData:
             if any(self.samples[i]['token'] not in detections for i in self.indices):
                 raise ValueError('Missing ' + dimension + ' keyframe detections')
         self.first_ego = self.ego_pose(self.samples[0])
+        self.associations = None
+        if cfg['render']['association_level']['edge_overlay']:
+            try:
+                self.load_associations()
+            except FileNotFoundError as exc:
+                print(str(exc), flush=True)
         self.load_seconds = time.perf_counter() - started
         print('{}: {} selected keyframes, loaded in {:.1f}s'.format(self.scene['name'], len(self.indices), self.load_seconds), flush=True)
+
+    def load_associations(self):
+        if self.associations is None:
+            self.associations = association_edges.load_cache(self.cfg, self.scene, self.samples)
 
     def sensor_records(self, sample, channel):
         sd = self.nusc.get('sample_data', sample['data'][channel])
@@ -217,6 +236,9 @@ class Viewer:
         self.o3d, self.gui, self.rendering = o3d, gui, rendering
         self.data, self.cfg, self.diagnostics = data, cfg, diagnostics
         self.options = copy.deepcopy(cfg['render'])
+        self.options['association_level']['edge_overlay'] = bool(
+            self.options['association_level']['edge_overlay'] and data.associations is not None)
+        self.edge_counts = []
         self.coordinate = cfg['coordinates']['frame']
         self.frame_pos, self.camera = 0, cfg['gui']['camera']
         self.playing = False; self.show_points = True; self.show_axes = True
@@ -261,6 +283,8 @@ class Viewer:
                                   ('3D detections: magenta', 'detection_level', 'cube_3d_overlay'),
                                   ('2D detections: cyan (RGB panel)', 'detection_level', 'cube_2d_overlay')]:
             self.add_check(label, self.options[group][key], lambda v, g=group, k=key: self.set_layer(g,k,v))
+        self.association_checkbox = self.add_check('Association edges: red',
+            self.options['association_level']['edge_overlay'], self.set_associations)
         camera = gui.Combobox()
         for name in cfg['render']['cameras']: camera.add_item(name)
         camera.selected_text = self.camera
@@ -268,7 +292,7 @@ class Viewer:
         self.panel.add_child(camera)
         self.image_widget = gui.ImageWidget(); self.panel.add_child(self.image_widget)
         self.caption = gui.Label(''); self.panel.add_child(self.caption)
-        self.panel.add_child(gui.Label('Keyframes only. 2D has no metric depth.\nRaw detections; no matching/evaluation.'))
+        self.panel.add_child(gui.Label('Keyframes only. 2D has no metric depth.\nEdges: verified 3D assignments; no 2D/birth links.'))
         self.status = gui.Label(diagnostics['renderer']); self.panel.add_child(self.status)
         save = gui.Button('Save 3D canvas PNG'); save.set_on_clicked(self.snapshot); self.panel.add_child(save)
         self.window.set_on_layout(self.layout)
@@ -279,6 +303,20 @@ class Viewer:
     def add_check(self, label, checked, callback):
         box = self.gui.Checkbox(label); box.checked = checked
         box.set_on_checked(callback); self.panel.add_child(box)
+        return box
+
+    def set_associations(self, value):
+        if value:
+            try:
+                self.data.load_associations()
+            except (OSError, ValueError) as exc:
+                self.association_checkbox.checked = False
+                self.options['association_level']['edge_overlay'] = False
+                self.window.show_message_box('Association cache unavailable', str(exc))
+                return
+        self.options['association_level']['edge_overlay'] = value
+        self.association_checkbox.checked = value
+        self.show_frame()
 
     def layout(self, context):
         rect = self.window.content_rect; width = min(self.cfg['gui']['sidebar_width'], rect.width//2)
@@ -315,10 +353,26 @@ class Viewer:
             return gui.Widget.EventCallbackResult.HANDLED
         return gui.Widget.EventCallbackResult.IGNORED
 
-    def line_material(self):
+    def line_material(self, width=None):
         material = self.rendering.MaterialRecord(); material.shader='unlitLine'
-        material.line_width=float(self.cfg['gui']['line_width'])
+        material.line_width=float(self.cfg['gui']['line_width'] if width is None else width)
         return material
+
+    def add_association_edges(self, sample, objects, transform):
+        segments = np.empty((0, 2, 3))
+        edge = self.options['association_level']
+        if edge['edge_overlay'] and self.options['cube_level']['cube_tracking_overlay']:
+            records = self.data.associations['matches'][sample['token']]
+            segments = association_edges.edge_segments(records, objects, transform)
+        if len(segments):
+            geometry = self.o3d.geometry.LineSet(
+                self.o3d.utility.Vector3dVector(segments.reshape(-1, 3)),
+                self.o3d.utility.Vector2iVector(np.arange(2 * len(segments)).reshape(-1, 2)))
+            geometry.paint_uniform_color([0., 1., 0.])
+            self.widget.scene.add_geometry('association_edges', geometry,
+                                           self.line_material(edge['edge_line_width']))
+        self.edge_counts.append(dict(frame=self.data.indices[self.frame_pos], count=len(segments),
+                                     enabled=edge['edge_overlay'], coordinate=self.coordinate))
 
     def add_boxes(self, layer, boxes, transform, color_fn, heading, labels):
         points=[]; lines=[]; colors=[]
@@ -384,6 +438,7 @@ class Viewer:
                                 ([b['detection_name']] if det['text_class'] else [])+
                                 (['{:.2f}'.format(b['detection_score'])] if det['text_score'] else []))
             self.add_boxes('detections',boxes,transform,lambda b:[1.,0.,1.],det['cube_heading'],label)
+        self.add_association_edges(sample, objects, transform)
         self.slider.int_value=self.frame_pos
         self.info.text=rgb.frame_header(self.data.scene['name'],self.camera,index,sample['token'],self.options).replace(' | ','\n')
         self.coordinate_label.text='Frame: {} | meters\nEgo axes: +X forward, +Y left, +Z up'.format(self.coordinate)
@@ -436,6 +491,7 @@ class Viewer:
                     report=dict(self.diagnostics,scene=self.data.scene['name'],visited_frames=self.visited,
                                 unique_frame_count=len(set(self.visited)),frame_update_seconds=self.times,
                                 data_load_seconds=self.data.load_seconds, tested_controls=self.tested_controls,
+                                association_edge_counts=self.edge_counts,
                                 screenshot=str(target),open3d_version=self.o3d.__version__,passed=True)
                     (output/'gui_smoke_test.json').write_text(json.dumps(report,indent=2))
                     self.app.quit()
@@ -465,6 +521,13 @@ class Viewer:
                     self.change_camera(camera)
                     self.tested_controls.append(camera)
                 self.change_camera(self.cfg['gui']['camera'])
+                if self.data.associations is not None:
+                    original = self.options['association_level']['edge_overlay']
+                    self.set_associations(False)
+                    assert not self.widget.scene.has_geometry('association_edges')
+                    self.set_associations(True)
+                    self.set_associations(original)
+                    self.tested_controls.append('association_edges')
                 self.toggle_play(); assert self.playing; self.toggle_play(); assert not self.playing
                 self.step(-1); self.step(1)
                 self.tested_controls.extend(['ego','world_first','global','lidar','ego_axes','play_pause','previous_next'])
@@ -482,9 +545,14 @@ class Viewer:
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config',default='config/viz_3D.yaml')
-    parser.add_argument('--validate-only',action='store_true',help='Check one scene against devkit coordinate/projection references; no GUI')
-    parser.add_argument('--smoke-test',action='store_true',help='Visit selected scene frames in real GPU GUI, test controls, save canvas and close')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--validate-only',action='store_true',help='Check one scene against devkit coordinate/projection references; no GUI')
+    mode.add_argument('--smoke-test',action='store_true',help='Visit selected scene frames in real GPU GUI, test controls, save canvas and close')
+    mode.add_argument('--export-associations',action='store_true',help='Replay one complete scene, verify saved results and cache actual 3D assignments; no evaluation/GUI')
     args=parser.parse_args();cfg=read_config(args.config)
+    if args.export_associations:
+        association_edges.export_cache(cfg)
+        return
     diagnostics=None if args.validate_only else gpu_diagnostics(cfg['gui']['require_hardware_gpu'])
     data=SceneData(cfg)
     output=rgb.resolve_path(cfg['paths']['output_dir']);output.mkdir(parents=True,exist_ok=True)
