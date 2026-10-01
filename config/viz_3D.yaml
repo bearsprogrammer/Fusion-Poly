@@ -10,7 +10,7 @@ paths:
 dataset:
   version: v1.0-trainval
 selection:
-  scene_name: scene-0099
+  scene_name: scene-1072
   start_frame: 0
   max_frames: null           # One scene only; keyframes (2 Hz) in this base GUI.
   classes: [car]            # null = all tracking classes.
