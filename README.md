@@ -161,6 +161,18 @@ After `test.py` finishes, open:
 <eval_path>/metrics_summary.json            # aggregated tracking + detection summary
 ```
 
+## Visualize actual 3D associations
+
+The Open3D GUI provides an `Association edges: red` checkbox below its layer
+controls. Export the selected scene's verified assignment cache once, then render:
+
+```bash
+python utils/viz_3D.py --config config/viz_3D.yaml --export-associations
+python utils/viz_3D.py --config config/viz_3D.yaml
+```
+
+See [association edge configuration and semantics](docs/association_edges.md).
+
 ## Project Layout
 
 ```text
