@@ -62,6 +62,22 @@ docker compose run --rm fusionpoly xeyes
 docker compose run --rm fusionpoly glxinfo -B
 ```
 
+빌드가 `apt-get` 단계에서 `exit code: 100`으로 실패하면 전체 로그를 확인한다:
+
+```bash
+docker compose --progress plain build fusionpoly
+```
+
+Bullseye LTS 종료 후 보안 저장소의 목록이 이미 삭제된 `.deb` 파일을 가리켜
+`libc6`, `perl-base` 등의 다운로드가 404로 실패하는 문제가 있다
+([Debian #1147093](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1147093)).
+Dockerfile은 Python 3.7 호환성을 유지하면서 보안 저장소를
+`20260903T220410Z` 시점의 Debian snapshot으로 고정한다.
+해당 과거 저장소에만 `check-valid-until=no`를 적용하며 서명 검증은 유지한다.
+이 스냅샷은 이후 보안 업데이트를 자동으로 받지 않는다.
+위 종료 코드만으로는 원인을 구분할 수 없으므로, 재발하면 로그 앞부분의
+`Err:` / `E:` 메시지를 확인한다.
+
 `glxinfo -B`에서 `llvmpipe` renderer와 **OpenGL core profile 4.1 이상**을 확인한다.
 `unable to open display` / authorization 오류면 XQuartz TCP 설정 및 cookie를 확인한다.
 `GLXBadFBConfig`, context 생성 오류 또는 OpenGL 2.1만 보이면 Open3D 지원 확인이
@@ -132,7 +148,7 @@ requirements 또는 Dockerfile을 수정하면 이미지를 다시 빌드한다.
 
 ## 검증 상태
 
-초안 작성 환경은 Linux이며 Mac/XQuartz 종단간 GUI 실행은 아직 검증하지 않았다.
-Dockerfile에는 빌드 시 `pip check`와 주요 Python/Open3D GUI 모듈 import 검사를 넣었다.
-이는 build가 실제 성공했거나 OpenGL context 생성이 검증됐다는 뜻은 아니다.
-Python 3.7 base image와 패키지 저장소의 다운로드 가능 여부도 첫 빌드에서 확인해야 한다.
+macOS Docker Desktop에서 보안 저장소 스냅샷 적용 후 APT/Python 패키지 설치,
+`pip check`, 주요 Python/Open3D GUI 모듈 import 검사를 통과했다.
+확인한 버전은 NumPy 1.21.6, OpenCV 4.12.0, Open3D 0.17.0이다.
+Mac/XQuartz 종단간 GUI 실행과 OpenGL context 생성은 아직 검증하지 않았다.

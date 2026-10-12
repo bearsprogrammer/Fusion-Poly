@@ -9,7 +9,15 @@ ENV PYTHONUNBUFFERED=1 \
     MPLCONFIGDIR=/tmp/fusionpoly-matplotlib \
     XDG_CACHE_HOME=/tmp/fusionpoly-cache
 
+# Bullseye security indexes reference removed packages after LTS ended.
+# Use a known complete security snapshot (Debian bug #1147093).
+# Only this historical source skips expiry checks; signatures remain required.
 RUN test "$(dpkg --print-architecture)" = amd64 \
+    && printf '%s\n' \
+        'deb https://deb.debian.org/debian bullseye main' \
+        'deb https://deb.debian.org/debian bullseye-updates main' \
+        'deb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/20260903T220410Z/ bullseye-security main' \
+        > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash build-essential ca-certificates \
