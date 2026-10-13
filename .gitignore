@@ -71,3 +71,8 @@ venv/
 # Small, portable scene lists are exceptions to the original *.json rule.
 !/data/train_indice.json
 !/data/val_indice.json
+
+# Version the portable CT prototype toy test; keep generated files ignored.
+!/ctmot/proto/tests/
+/ctmot/proto/tests/*
+!/ctmot/proto/tests/test_prediction.py

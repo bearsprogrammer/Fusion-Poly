@@ -1,0 +1,7 @@
+# State: [px, py, pz, vx, vy, vz], global axes; metres, seconds.
+dynamics:
+  model: cv
+solver:
+  rtol: 1.0e-9
+  atol: 1.0e-11
+  max_step_s: 0.1  # Numerical step cap, NOT a sensor/frame interval.

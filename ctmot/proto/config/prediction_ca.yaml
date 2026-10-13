@@ -1,0 +1,8 @@
+# Toy acceleration in global XYZ, m/s^2. This is not learned or estimated.
+dynamics:
+  model: ca
+  acceleration_mps2: [1.0, 0.4, -0.2]
+solver:
+  rtol: 1.0e-9
+  atol: 1.0e-11
+  max_step_s: 0.1
