@@ -76,3 +76,7 @@ venv/
 !/ctmot/proto/tests/
 /ctmot/proto/tests/*
 !/ctmot/proto/tests/test_prediction.py
+
+# Real-data prototype tests and generated validation reports.
+!/ctmot/proto/tests/test_history.py
+/ctmot/proto/outputs/

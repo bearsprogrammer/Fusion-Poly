@@ -1,5 +1,8 @@
 # CT prediction prototype — ODE toy validation
 
+실제 track history 검증기는 [REAL_DATA_VALIDATION.md](REAL_DATA_VALIDATION.md)를 참고하세요.
+아래 문서는 독립 ODE predictor와 toy test의 사용법입니다.
+
 이번 단계의 범위는 비학습 ODE predictor와 toy test입니다. Fusion-Poly의
 tracking, correction, covariance, association에는 연결하지 않았습니다.
 
