@@ -80,3 +80,4 @@ venv/
 # Real-data prototype tests and generated validation reports.
 !/ctmot/proto/tests/test_history.py
 /ctmot/proto/outputs/
+!/ctmot/proto/tests/test_association_replay.py

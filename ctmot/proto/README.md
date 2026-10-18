@@ -128,3 +128,12 @@ python -m unittest discover -s ctmot/proto/tests -v
 불규칙 Δt 해석해 비교에서 관측한 최대 절대 성분 오차:
 CV `3.20e-14`, CA `4.26e-14` (위 환경).
 이는 수치 구현의 정확성 검증이며, 실제 차량 운동 예측력이나 IDS 개선의 증거는 아닙니다.
+
+## 실제 association 및 ID continuity replay
+
+CT 위치 예측을 실제 tracker에 한 번 주입하고 기존 Hungarian/cascade/KF/lifecycle로
+후속 프레임을 진행하는 실험은 [ASSOCIATION_REPLAY.md](ASSOCIATION_REPLAY.md)를 참고하세요.
+
+```bash
+python -m ctmot.proto.association_replay --config ctmot/proto/config/replay_scene1072.yaml
+```

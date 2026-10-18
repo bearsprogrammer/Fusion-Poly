@@ -1,0 +1,10 @@
+validation_config: ctmot/proto/config/validation_scene1072.yaml
+tracker_config: Fusion_Poly_EXP/eval_results/nusc_config_high/config.yaml
+detection_3d_path: data/detector/val/nuscenes_val_centerpoint_3d.json
+detection_2d_path: data/utils/cascade_rcnn_4hz/nuscenes_val_cascade_2d_4hz.json
+first_token_path: data/utils/first_token_table/trainval/nuscenes_val_first_sample_tokens.json
+window:
+  start_frame: 18  # 0-based; scene start through frame 19 is replayed to restore KF/P/lifecycle.
+  end_frame: 22
+variants: [baseline, actual_dt_ctrv, ct_cv, ct_ca, past_xyz_cv]
+output_root: ctmot/proto/outputs/association_replay
