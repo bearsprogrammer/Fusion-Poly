@@ -1,0 +1,25 @@
+dataset_root: /home/allen-5070ti/dataset/nuScenes/full_trainval
+tracker_config: Fusion_Poly_EXP/eval_results/nusc_config_high/config.yaml
+original_results: Fusion_Poly_EXP/result/nusc_config_high/results.json
+original_metrics: Fusion_Poly_EXP/eval_results/nusc_config_high/tracking
+original_events: Fusion_Poly_EXP/inspection/nusc_config_high/ids_events.json
+detection_3d: data/detector/val/nuscenes_val_centerpoint_3d.json
+detection_2d: data/utils/cascade_rcnn_4hz/nuscenes_val_cascade_2d_4hz.json
+first_tokens: data/utils/first_token_table/trainval/nuscenes_val_first_sample_tokens.json
+output_root: ctmot/proto/outputs/stage4
+workers: 6
+eval_workers: 6
+history_observations: 4
+minimum_observations: 3
+insufficient_history: cv
+mid_timestamp: latest_camera
+covariance: original_nominal_schedule
+yaw: original_model_actual_dt
+state_intervention: geometric_center_only
+solver: {rtol: 1.0e-9, atol: 1.0e-11, max_step_s: 0.1}
+cases:
+  - {event_id: 419, scene: scene-1072, track_id: 102, anchor: 19, query: 20, end: 22, mechanism: P1}
+  - {event_id: 79, scene: scene-0099, track_id: 152, anchor: 19, query: 20, end: 22, mechanism: P1}
+  - {event_id: 81, scene: scene-0099, track_id: 45, anchor: 28, query: 29, end: 31, mechanism: P1}
+  - {event_id: 84, scene: scene-0101, track_id: 14, anchor: 10, query: 14, end: 16, mechanism: P2}
+  - {event_id: 349, scene: scene-0915, track_id: 108, anchor: 8, query: 12, end: 14, mechanism: P2}

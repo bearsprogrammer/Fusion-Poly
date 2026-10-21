@@ -81,3 +81,9 @@ venv/
 !/ctmot/proto/tests/test_history.py
 /ctmot/proto/outputs/
 !/ctmot/proto/tests/test_association_replay.py
+
+# Stage 4 portable validation tests (generated results remain under proto/outputs).
+!/ctmot/stage4/tests/
+/ctmot/stage4/tests/*
+!/ctmot/stage4/tests/test_prediction.py
+!/ctmot/stage4/tests/test_evaluation.py
