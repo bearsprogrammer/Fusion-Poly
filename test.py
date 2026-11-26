@@ -96,9 +96,56 @@ def main(result_path, token, process, nusc_loader):
 
     # write file
     if process > 1:
-        json.dump(result, open(result_path + str(token) + ".json", "w"))
+        json.dump(result, open(os.path.join(result_path, str(token) + ".json"), "w"))
     else:
         json.dump(result, open(result_path + "/results.json", "w"))
+
+
+def _init_tracking_worker(loader):
+    global _tracking_worker_loader
+    _tracking_worker_loader = loader
+
+
+def _run_tracking_worker(result_path, token, process):
+    main(result_path, token, process, _tracking_worker_loader)
+
+
+def run_parallel_tracking(result_path, process, loader):
+    # Inherit the large dataset under fork instead of serializing it into
+    # every Pool task (Python 3.7 IPC messages have a 2 GiB size limit).
+    context = multiprocessing.get_context('fork')
+    with context.Pool(process, initializer=_init_tracking_worker,
+                      initargs=(loader,)) as pool:
+        jobs = [pool.apply_async(_run_tracking_worker,
+                                 (result_path, token, process))
+                for token in range(process)]
+        for token, job in enumerate(jobs):
+            try:
+                job.get()
+            except Exception as exc:
+                raise RuntimeError('Tracking worker {} failed'.format(token)) from exc
+
+    results = {'results': {}, 'meta': {}}
+    for token in range(process):
+        with open(os.path.join(result_path, str(token) + '.json')) as f:
+            part = json.load(f)
+        if set(results['results']).intersection(part['results']):
+            raise ValueError('Duplicate sample tokens across tracking workers')
+        results['results'].update(part['results'])
+        results['meta'].update(part['meta'])
+
+    expected = set(loader.detector_3d)
+    actual = set(results['results'])
+    if not actual or actual != expected:
+        raise ValueError('Incomplete tracking results: {} samples, expected {}; '
+                         'missing {}, extra {}'.format(
+                             len(actual), len(expected), len(expected - actual),
+                             len(actual - expected)))
+    # Publish only after every worker and the complete merge succeed.
+    output = os.path.join(result_path, 'results.json')
+    with open(output + '.tmp', 'w') as f:
+        json.dump(results, f)
+    os.replace(output + '.tmp', output)
 
 
 def eval(result_path, eval_path, nusc_path):
@@ -449,23 +496,7 @@ def run_nusc_polymot(config, result_path, eval_path, only_eval=False):
 
     if not only_eval:
         if args.process > 1:
-            result_temp_path = result_path
-            os.makedirs(result_temp_path, exist_ok=True)
-            pool = multiprocessing.Pool(args.process)
-            for token in range(args.process):
-                pool.apply_async(main, args=(result_temp_path, token, args.process, nusc_loader))
-            pool.close()
-            pool.join()
-            results = {'results': {}, 'meta': {}}
-            # combine the results of each process
-            try:
-                for token in range(args.process):
-                    result = json.load(open(os.path.join(result_temp_path, str(token) + '.json'), 'r'))
-                    results["results"].update(result["results"])
-                    results["meta"].update(result["meta"])
-            except:
-                print(traceback.format_exc())
-            json.dump(results, open(result_path + '/results.json', "w"))
+            run_parallel_tracking(result_path, args.process, nusc_loader)
         else:
             # single process inference
             main(result_path, 0, 1, nusc_loader)
